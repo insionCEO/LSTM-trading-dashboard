@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     libpq-dev \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -24,20 +23,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Create logs directory
-RUN mkdir -p logs
+# Create necessary directories
+RUN mkdir -p logs simulation_results
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash trader && \
     chown -R trader:trader /app
 USER trader
 
-# Expose port for web dashboard (if needed)
-EXPOSE 5000
+# Expose port for web dashboard
+EXPOSE 5001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
-
-# Default command
-CMD ["python", "run_trading_system.py"] 
+# Default command (can be overridden)
+CMD ["python", "dashboard/app.py"] 

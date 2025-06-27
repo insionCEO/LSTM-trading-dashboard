@@ -54,10 +54,10 @@ services:
     ports:
       - "5000:5000"
 
-  # Web Dashboard (optional)
+  # Web Dashboard
   dashboard:
     build: .
-    command: ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5001"]
+    command: ["python", "dashboard/app.py"]
     environment:
       - FLASK_APP=dashboard/app.py
       - FLASK_ENV=production
@@ -72,41 +72,6 @@ services:
     profiles:
       - dashboard
 
-  # Monitoring (optional)
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
-    profiles:
-      - monitoring
-
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
-    depends_on:
-      - prometheus
-    profiles:
-      - monitoring
-
 volumes:
   postgres_data:
-  redis_data:
-  prometheus_data:
-  grafana_data: 
+  redis_data: 
