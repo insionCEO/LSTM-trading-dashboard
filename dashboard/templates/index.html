@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading System - Simulation Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+            border-radius: 10px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .metric-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .metric-card.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .loading {
+            display: none;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                AI Trading System - Simulation Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Configuration Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cog me-2"></i>Simulation Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="simulationForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Stock Symbols</label>
+                                        <select class="form-select" id="symbols" multiple>
+                                            <option value="AAPL">AAPL - Apple</option>
+                                            <option value="MSFT">MSFT - Microsoft</option>
+                                            <option value="GOOGL">GOOGL - Google</option>
+                                            <option value="AMZN">AMZN - Amazon</option>
+                                            <option value="META">META - Meta</option>
+                                            <option value="TSLA">TSLA - Tesla</option>
+                                            <option value="NVDA">NVDA - NVIDIA</option>
+                                            <option value="NFLX">NFLX - Netflix</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" id="startDate" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" class="form-control" id="endDate" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Initial Capital ($)</label>
+                                        <input type="number" class="form-control" id="initialCapital" value="100000" min="1000" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Trading Strategy</label>
+                                        <select class="form-select" id="strategy" required>
+                                            <option value="multifactor">Multi-Factor</option>
+                                            <option value="momentum">Momentum</option>
+                                            <option value="mean_reversion">Mean Reversion</option>
+                                            <option value="sentiment">Sentiment</option>
+                                            <option value="fundamental">Fundamental</option>
+                                            <option value="ensemble">Ensemble</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Commission Rate (%)</label>
+                                        <input type="number" class="form-control" id="commission" value="0.1" min="0" max="1" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-primary me-2" onclick="verifyData()">
+                                        <i class="fas fa-check me-1"></i>Verify Data
+                                    </button>
+                                    <button type="button" class="btn btn-success me-2" onclick="collectData()">
+                                        <i class="fas fa-download me-1"></i>Collect Data
+                                    </button>
+                                    <button type="button" class="btn btn-warning" onclick="runSimulation()">
+                                        <i class="fas fa-play me-1"></i>Run Simulation
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div class="loading" id="loadingSection">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2" id="loadingMessage">Processing...</p>
+                            <div class="progress mt-3">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="row" id="resultsSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-bar me-2"></i>Simulation Results</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Key Metrics -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card metric-card">
+                                    <div class="card-body text-center">
+                                        <h6>Total Return</h6>
+                                        <h3 id="totalReturn">0%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card metric-card info">
+                                    <div class="card-body text-center">
+                                        <h6>Sharpe Ratio</h6>
+                                        <h3 id="sharpeRatio">0.00</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card metric-card warning">
+                                    <div class="card-body text-center">
+                                        <h6>Max Drawdown</h6>
+                                        <h3 id="maxDrawdown">0%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card metric-card success">
+                                    <div class="card-body text-center">
+                                        <h6>Win Rate</h6>
+                                        <h3 id="winRate">0%</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Equity Curve Chart -->
+                        <div class="chart-container">
+                            <canvas id="equityChart"></canvas>
+                        </div>
+
+                        <!-- Trade Details -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Trade Summary</h6>
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr><td>Total Trades:</td><td id="totalTrades">0</td></tr>
+                                        <tr><td>Profitable Trades:</td><td id="profitableTrades">0</td></tr>
+                                        <tr><td>Average Trade P&L:</td><td id="avgTradePnl">$0</td></tr>
+                                        <tr><td>Best Trade:</td><td id="bestTrade">$0</td></tr>
+                                        <tr><td>Worst Trade:</td><td id="worstTrade">$0</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Capital Summary</h6>
+                                <table class="table table-sm">
+                                    <tbody>
+                                        <tr><td>Initial Capital:</td><td id="initialCapitalResult">$0</td></tr>
+                                        <tr><td>Final Capital:</td><td id="finalCapital">$0</td></tr>
+                                        <tr><td>Total P&L:</td><td id="totalPnl">$0</td></tr>
+                                        <tr><td>Commission Paid:</td><td id="totalCommission">$0</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Trade History -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h6>Recent Trades</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Symbol</th>
+                                                <th>Side</th>
+                                                <th>Quantity</th>
+                                                <th>Price</th>
+                                                <th>P&L</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tradeHistory">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div id="alertsSection"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let equityChart = null;
+        let currentSimulationId = null;
+
+        // Initialize date inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            
+            document.getElementById('startDate').value = lastMonth.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        });
+
+        function showLoading(message) {
+            document.getElementById('loadingMessage').textContent = message;
+            document.getElementById('loadingSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSection').style.display = 'none';
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertsSection = document.getElementById('alertsSection');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertsSection.appendChild(alert);
+        }
+
+        function getSelectedSymbols() {
+            const select = document.getElementById('symbols');
+            return Array.from(select.selectedOptions).map(option => option.value);
+        }
+
+        async function verifyData() {
+            const symbols = getSelectedSymbols();
+            if (symbols.length === 0) {
+                showAlert('Please select at least one symbol', 'warning');
+                return;
+            }
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            showLoading('Verifying data availability...');
+
+            try {
+                const response = await fetch('/api/verify-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        symbols: symbols,
+                        start_date: startDate,
+                        end_date: endDate
+                    })
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.success) {
+                    const verification = result.verification;
+                    if (verification.overall_ready) {
+                        showAlert('Data verification successful! Ready for simulation.', 'success');
+                    } else {
+                        showAlert('Some data is missing. Consider collecting data first.', 'warning');
+                    }
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                hideLoading();
+                showAlert('Error verifying data: ' + error.message, 'danger');
+            }
+        }
+
+        async function collectData() {
+            const symbols = getSelectedSymbols();
+            if (symbols.length === 0) {
+                showAlert('Please select at least one symbol', 'warning');
+                return;
+            }
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            showLoading('Collecting historical data...');
+
+            try {
+                const response = await fetch('/api/collect-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        symbols: symbols,
+                        start_date: startDate,
+                        end_date: endDate
+                    })
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.success) {
+                    showAlert('Data collection completed successfully!', 'success');
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                hideLoading();
+                showAlert('Error collecting data: ' + error.message, 'danger');
+            }
+        }
+
+        async function runSimulation() {
+            const symbols = getSelectedSymbols();
+            if (symbols.length === 0) {
+                showAlert('Please select at least one symbol', 'warning');
+                return;
+            }
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const initialCapital = parseFloat(document.getElementById('initialCapital').value);
+            const strategy = document.getElementById('strategy').value;
+            const commission = parseFloat(document.getElementById('commission').value) / 100;
+
+            showLoading('Running simulation...');
+
+            try {
+                const response = await fetch('/api/run-simulation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        symbols: symbols,
+                        start_date: startDate,
+                        end_date: endDate,
+                        initial_capital: initialCapital,
+                        strategy: strategy,
+                        commission: commission
+                    })
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.success) {
+                    currentSimulationId = result.simulation_id;
+                    showAlert('Simulation completed successfully!', 'success');
+                    displayResults(result.summary);
+                } else {
+                    showAlert(result.message, 'danger');
+                }
+            } catch (error) {
+                hideLoading();
+                showAlert('Error running simulation: ' + error.message, 'danger');
+            }
+        }
+
+        function displayResults(summary) {
+            // Update metrics
+            document.getElementById('totalReturn').textContent = summary.total_return_pct.toFixed(2) + '%';
+            document.getElementById('sharpeRatio').textContent = summary.sharpe_ratio.toFixed(2);
+            document.getElementById('maxDrawdown').textContent = summary.max_drawdown_pct.toFixed(2) + '%';
+            document.getElementById('winRate').textContent = summary.win_rate.toFixed(1) + '%';
+            document.getElementById('totalTrades').textContent = summary.total_trades;
+
+            // Load detailed results
+            loadDetailedResults();
+        }
+
+        async function loadDetailedResults() {
+            if (!currentSimulationId) return;
+
+            try {
+                const response = await fetch(`/api/simulation/${currentSimulationId}`);
+                const data = await response.json();
+
+                // Update detailed metrics
+                document.getElementById('initialCapitalResult').textContent = '$' + data.results.initial_capital.toLocaleString();
+                document.getElementById('finalCapital').textContent = '$' + data.results.final_capital.toLocaleString();
+                document.getElementById('totalPnl').textContent = '$' + data.results.total_return.toLocaleString();
+                document.getElementById('profitableTrades').textContent = data.results.profitable_trades;
+                document.getElementById('avgTradePnl').textContent = '$' + data.results.avg_trade_pnl.toLocaleString();
+                document.getElementById('bestTrade').textContent = '$' + data.results.best_trade.toLocaleString();
+                document.getElementById('worstTrade').textContent = '$' + data.results.worst_trade.toLocaleString();
+
+                // Calculate total commission
+                const totalCommission = data.results.trades.reduce((sum, trade) => sum + trade.commission, 0);
+                document.getElementById('totalCommission').textContent = '$' + totalCommission.toLocaleString();
+
+                // Update trade history
+                updateTradeHistory(data.results.trades);
+
+                // Create equity curve chart
+                createEquityChart(data.results.equity_curve);
+
+                // Show results section
+                document.getElementById('resultsSection').style.display = 'block';
+            } catch (error) {
+                showAlert('Error loading detailed results: ' + error.message, 'danger');
+            }
+        }
+
+        function updateTradeHistory(trades) {
+            const tbody = document.getElementById('tradeHistory');
+            tbody.innerHTML = '';
+
+            // Show last 10 trades
+            const recentTrades = trades.slice(-10).reverse();
+            
+            recentTrades.forEach(trade => {
+                const row = document.createElement('tr');
+                const date = new Date(trade.timestamp).toLocaleDateString();
+                const pnlClass = trade.pnl >= 0 ? 'text-success' : 'text-danger';
+                const pnlSign = trade.pnl >= 0 ? '+' : '';
+                
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${trade.symbol}</td>
+                    <td><span class="badge ${trade.side === 'buy' ? 'bg-success' : 'bg-danger'}">${trade.side.toUpperCase()}</span></td>
+                    <td>${trade.quantity.toFixed(2)}</td>
+                    <td>$${trade.price.toFixed(2)}</td>
+                    <td class="${pnlClass}">${pnlSign}$${trade.pnl.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function createEquityChart(equityCurve) {
+            const ctx = document.getElementById('equityChart').getContext('2d');
+            
+            if (equityChart) {
+                equityChart.destroy();
+            }
+
+            const labels = equityCurve.map(point => new Date(point.date).toLocaleDateString());
+            const data = equityCurve.map(point => point.equity);
+
+            equityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Portfolio Equity Curve'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html> 
