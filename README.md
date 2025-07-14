@@ -16,11 +16,11 @@ https://www.youtube.com/watch?v=9OECMEj2i70&feature=youtu.be
  -	Android Notifications and Trading
 
 ## Screenshots
-![UI](braikout/docs/images/ui.png)
-![Trading Page](braikout/docs/images/trading.png)
-![chartTa](braikout/docs/images/chartTa.png)
-![Trading History](braikout/docs/images/history.png)
-![Backtest](braikout/docs/images/backtest.png)
-![App](braikout/docs/images/app.png)
-![component](braikout/docs/images/ComponentDiagram.JPG)
+![UI](images/ui.png)
+![Trading Page](images/trading.png)
+![chartTa](images/chartTa.png)
+![Trading History](images/history.png)
+![Backtest](images/backtest.png)
+![App](images/app.png)
+![component](images/ComponentDiagram.JPG)
 
