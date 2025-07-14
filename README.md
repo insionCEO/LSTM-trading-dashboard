@@ -1,4 +1,4 @@
-# Trading Platform
+# LSTM-trading-dashboard
 
 Braikout is a cryptocurrency and forex trading platform which makes use of machine learning and automated candlestick chart analysis, designed with the intent of making the job of traders easier, less time consuming, and more profitable. 
 
